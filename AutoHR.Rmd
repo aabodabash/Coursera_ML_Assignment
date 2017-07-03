@@ -1,0 +1,124 @@
+---
+title: "Auto HA"
+author: "Ameen AboDabash"
+date: "July 3, 2017"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+
+
+####Executive Summary
+Auto HA, is the automatic detection of different (H)uman (A)ctivities,i.e, we will predict "which" activity was performed at a specific point in time, using data recorded of Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+we'll walk through two different models "Decision Tree & Random Forest", and we will choose the most accurate one "maximizing the accuracy and minimizing the out-of-sample error".
+
+As we're going to prove in this document we found that, the Random forest is the most accurate model fit our data and predict activity Type "the output variable /Class" with Overall accuracy 99~%, while the decision tree model overall accuracy is 74~%, and we're going to use Random Forest Model to predict the 20 cases in the test dataset.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Rule No1 , setting the seed
+set.seed(1988)
+
+##loading requrired packages
+packages<-c("caret","randomForest","rpart")
+sapply(packages, require, character.only = TRUE)
+
+
+if (!file.exists("data\\pml-training.csv")) {
+  download.file("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile = "data\\pml-training.csv")
+}
+if (!file.exists("data\\pml-testing.csv")) {
+  download.file("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile = "data\\pml-testing.csv")
+}
+
+```
+
+####Setting the Scene
+Loading the data "[Training](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv) & [Test](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)", setting the seed, & loading the required R Packages "caret , random-Forest & rpart".
+
+
+
+Quick Exploration analysis on training dataset , we found that there're 160 vars "Columns", its a huge number, so lets look at them and figure out which one to remove to ease our modeling process, the first column is an index column so for sure will be removed, the second column refer to participator username, so will be removed as well , we're predicting the class on activity measurements no on the username,based on same concept no need for time stamps , so lets remove time/dates cols,  finally  near Zero Vars(Columns) removed:
+
+
+
+```{r  }
+
+##Loading MAster training/Testing DS, the file already downloaded to  data folder, access the src code to view the scrip
+masterTrainingDS <- read.csv("data\\pml-training.csv", na.strings=c("NA","#DIV/0!",""))[-c(1:7)]
+masterTestingDS <- read.csv("data\\pml-testing.csv", na.strings=c("NA","#DIV/0!",""))[-c(1,7)]
+
+
+# we noticed some cols without any values all zeros, so lets remove them from the master trianing ds
+masterTrainingDS<-masterTrainingDS[,colSums(is.na(masterTrainingDS)) == 0]
+ 
+dim(masterTrainingDS)
+
+```
+
+
+Now, let *bootstrap* our Master training dataset into training dataset (60%) and the remaining for testing our trained model.
+
+```{r  }
+
+inTrain <- createDataPartition(masterTrainingDS$classe, p=0.6, list=FALSE)
+myTraining <- masterTrainingDS[inTrain, ]
+myTesting <- masterTrainingDS[-inTrain, ]
+
+dim(myTraining)
+dim(myTesting)
+
+
+```
+ 
+
+
+####Decision Tree Model
+
+
+```{r  }
+# Building Decision Tree Model :
+model1 <- rpart(classe ~ ., data=myTraining, method="class")
+
+# Predicting using Random DecisionTree Model:
+prediction1 <- predict(model1, myTesting, type = "class")
+
+# Test results on Training Testing subset data set:
+confusionMatrix(prediction1, myTesting$classe)
+```
+ 
+
+
+####Random Forest Model
+
+```{r}
+# Building   Random Forest model,
+#thanks for R just one line and we're done!:
+model2 <- randomForest(classe ~. , data=myTraining, method="class")
+
+# Predicting using Random Forest Model:
+prediction2 <- predict(model2, myTesting, type = "class")
+ 
+# Test results on Training Testing subset data set:
+confusionMatrix(prediction2, myTesting$classe)
+```
+
+
+
+####Results
+So we summarized up the solution above in the executive summary and as we proved through quick modeling using R, "Thank you again for who built these amazing R packages", the first Model **"Decision Tree" predected the classe with Accuracy : 0.7402 (95% CI : (0.7304, 0.7499))**  , while the **Random Forest predicted the target var "classe" with Accuracy :0.9949 (95% CI : (0.9931, 0.9964))**.
+
+So, by applying the trained Random forest Model to MasterTestingDataset we will get the following results:
+
+
+```{r}
+finalResults <- predict(model2, masterTestingDS, type="class")
+finalResults
+
+```
+
+Analysis available on [git-hub]<https://github.com/aabodabash/Coursera_ML_Assignment.git>
