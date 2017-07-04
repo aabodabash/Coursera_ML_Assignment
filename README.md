@@ -3,3 +3,6 @@ Auto HA, is the automatic detection of different (H)uman (A)ctivities,i.e, we wi
 we'll walk through two different models "Decision Tree & Random Forest", and we will choose the most accurate one "maximizing the accuracy and minimizing the out-of-sample error".
 
 As we're going to prove in this document we found that, the Random forest is the most accurate model fit our data and predict activity Type "the output variable /Class" with Overall accuracy 99~%, while the decision tree model overall accuracy is 74~%, and we're going to use Random Forest Model to predict the 20 cases in the test dataset.
+
+
+Detailed Report : AutoHR.HTML & AutoHR.RMD
